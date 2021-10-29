@@ -1,0 +1,18 @@
+.profile__info{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(min-content, max-content));
+    grid-template-rows: repeat(2, minmax(min-content, max-content));
+    grid-template-areas:
+    "title edit-button"
+    "subtitle subtitle";
+    row-gap: 16px;
+    column-gap: 18px;
+}
+
+@media screen and (max-width: 597px){
+    .profile__info{
+        row-gap: 14px;
+        column-gap: 10px;
+        margin-bottom: 32px;
+    }
+}
