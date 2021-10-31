@@ -20,22 +20,9 @@ class Register extends React.Component {
     handleSubmit(e) {
         e.preventDefault();
         const { username, password } = this.state;
-        mestoAuth.register(username, password).then((res) => {
-            if (res && res.status !== 400) {
-                this.setState({
-                    message: 'Вы успешно зарегистрировались!'
-                }, () => {
-                    this.props.handleRegister({ message: this.state.message, status: 'true' });
-                    this.props.history.push('/sign-in');
-                })
-            } else {
-                this.setState({
-                    message: 'Что-то пошло не так'
-                }, () => { this.props.handleRegister({ message: this.state.message, status: 'false' }); })
-            }
-        })
-            .catch(err => console.log(err));
+        this.props.handleRegister(username, password);
     }
+
     render() {
         return (
             <div className="login" >

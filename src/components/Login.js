@@ -1,6 +1,5 @@
 import React from "react";
 import { withRouter } from 'react-router-dom';
-import * as mestoAuth from '../utils/mestoAuth.js';
 class Login extends React.Component {
     constructor(props) {
         super(props);
@@ -19,21 +18,14 @@ class Login extends React.Component {
         });
     }
     handleSubmit(e) {
-        e.preventDefault()
-        if (!this.state.username || !this.state.password) {
+        e.preventDefault();
+        const { username, password } = this.state;
+        if (!username || !password) {
             return;
         }
-        const { username, password } = this.state;
-        mestoAuth.authorize(username, password)
-            .then((res) => {
-                if (res.token) {
-                    this.setState({ username: '', password: '' }, () => {
-                        this.props.handleLogin(e);
-                        this.props.history.push('/');
-                    })
-                }
-            })
-            .catch(err => console.log(err));
+        this.setState({ username: '', password: '' }, () => {
+            this.props.handleLogin(username, password);
+        })
     }
     render() {
         return (

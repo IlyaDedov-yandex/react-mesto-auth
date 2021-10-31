@@ -16,6 +16,7 @@ import AddPlacePopup from './AddPlacePopup';
 import DeleteCardPopup from './DeleteCardPopup';
 import ImagePopup from './ImagePopup';
 import InfoTooltip from './InfoTooltip.js';
+import Spinner from './Spinner.js';
 function App() {
   const history = useHistory();
   const [loggedIn, setLoggedIn] = useState(false);
@@ -31,28 +32,33 @@ function App() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [cardToDelete, setCardToDelete] = useState(null);
+
   useEffect(() => {
     handleTokenCheck();
   }, []);
 
+  useEffect(() => {
+    if (loggedIn) {
+      Promise.all([api.getInitialInfo(), api.getInitialCards()])
+        .then(([info, cardsArr]) => {
+          setCurrentUser(info);
+          setCards(cardsArr);
+          setIsLoading(false);
+        })
+        .catch(err => console.log(err));
+    }
+  }, [loggedIn]);
+
   function handleTokenCheck() {
-    if (localStorage.getItem('jwt')) {
-      const jwt = localStorage.getItem('jwt');
+    const jwt = localStorage.getItem('jwt');
+    if (jwt) {
       mestoAuth.checkToken(jwt)
         .then((res) => {
-          if (res) {
-            setLoggedIn(true);
-            setUserEmail(res.data.email);
-            history.push('/');
-            Promise.all([api.getInitialInfo(), api.getInitialCards()])
-              .then(([info, cardsArr]) => {
-                setCurrentUser(info);
-                setCards(cardsArr);
-                setIsLoading(false);
-              })
-              .catch(err => console.log(err));
-          }
+          setLoggedIn(true);
+          setUserEmail(res.data.email);
+          history.push('/');
         })
+        .catch(err => console.log(err));
     }
   }
   function handleCardLike(card) {
@@ -119,16 +125,31 @@ function App() {
       })
       .catch(err => console.log(err));
   }
-  function handleLogin(e) {
-    e.preventDefault();
-    setLoggedIn(true);
+  function handleLogin(username, password) {
+    mestoAuth.authorize(username, password)
+      .then((res) => {
+        if (res.token) {
+          localStorage.setItem('jwt', res.token);
+          setLoggedIn(true);
+          history.push('/');
+        }
+      })
+      .catch(err => console.log(err));
   }
   function handleSignOut() {
+    localStorage.removeItem('jwt');
     setUserEmail('');
     setLoggedIn(false);
   }
-  function handleRegister(res) {
-    setRegisterStatus(res);
+  function handleRegister(username, password) {
+    mestoAuth.register(username, password)
+      .then(() => {
+        history.push('/sign-in');
+        setRegisterStatus({ message: 'Вы успешно зарегистрировались!', status: 'true' });
+      })
+      .catch(() => {
+        setRegisterStatus({ message: 'Что-то пошло не так! Попробуйте ещё раз.', status: 'false' })
+      })
     setIsInfoTooltipOpen(true);
   }
   return (
@@ -142,7 +163,7 @@ function App() {
           <Route path="/sign-in">
             <Login handleLogin={handleLogin} />
           </Route>
-          <ProtectedRoute path="/" loggedIn={loggedIn} component={Main} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
+          <ProtectedRoute path="/" loggedIn={loggedIn} component={isLoading ? Spinner : Main} onEditProfile={handleEditProfileClick} onAddPlace={handleAddPlaceClick} onEditAvatar={handleEditAvatarClick} onCardClick={handleCardClick} cards={cards} onCardLike={handleCardLike} onCardDelete={handleCardDelete} />
         </Switch>
         <Footer />
         <EditProfilePopup isOpen={isEditProfilePopupOpen} onClose={closeAllPopups} onUpdateUser={handleUpdateUser} />

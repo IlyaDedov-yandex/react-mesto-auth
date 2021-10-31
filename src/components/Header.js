@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 function Header({ userEmail, handleSignOut }) {
     const location = useLocation();
     function signOut() {
-        localStorage.removeItem('jwt');
         handleSignOut();
     }
     function renderSwitch(param) {
